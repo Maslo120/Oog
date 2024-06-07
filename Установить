@@ -1,0 +1,252 @@
+
+
+#!/bin/bash
+
+termux-setup-storage
+pkg update
+termux-change-repo
+pkg upgrade
+pkg install wget
+pkg install git
+pkg install hashdeep
+clear
+sleep 2
+echo -n "Setting up storage permissions.."
+yes | termux-setup-storage &>/dev/null
+sleep 2
+clear
+while true; do
+    if [ -d ~/storage/shared ]; then
+        break
+    else
+        echo "Storage permission denied"
+    fi
+done
+clear
+sleep 2
+
+echo -n "Installing Termux-am.."
+echo -e "\n"
+pkg install termux-am -y &>/dev/null
+echo -n "Termux-am Installed Successfuly "
+echo -e "\n"
+
+rm ~/x
+
+if [ -e $PREFIX/glibc ]; then
+    echo -n "Removing previous glibc. Continue? (Y/n) "
+    read i
+    if [ "$i" = "Y" ] || [ "$i" = "y" ]; then
+        rm -rf $PREFIX/glibc
+    else
+        return 1
+    fi
+fi
+
+INSTALL_WOW64=0
+
+echo "Select an option"
+echo "1) Install maslobox with box86 build"
+echo "2) Install maslobox with wow64 build"
+echo ""
+echo -n "Selected number: "
+read i
+case "$i" in
+1)
+    INSTALL_WOW64=0
+;;
+2)
+    INSTALL_WOW64=1
+;;
+*)
+    return 1
+;;
+esac
+
+echo "Installing maslobox..."
+
+function wget-git-q {
+    wget -q --retry-connrefused --tries=0 --header "PRIVATE-TOKEN: $PRIVATE_TOKEN" "https://gitlab.com/api/v4/projects/$PROJECT_ID/repository/files/$1/raw?ref=main" -O $2
+    return $?
+}
+
+echo "Updating package manager"
+mkdir -p $PREFIX/glibc/opt/package-manager/installed
+
+if [ "$INSTALL_WOW64" = "1" ]; then
+echo "PRIVATE_TOKEN=glpat-h5r7HjKoPKZPxmfg79xs
+PROJECT_ID=54240888">$PREFIX/glibc/opt/package-manager/token
+else
+echo "PRIVATE_TOKEN=glpat-Xs4HfrCkMpbedkPycqzP
+PROJECT_ID=52465323">$PREFIX/glibc/opt/package-manager/token
+fi
+
+. $PREFIX/glibc/opt/package-manager/token
+if ! wget-git-q "package-manager" "$PREFIX/glibc/opt/package-manager/package-manager"; then
+    echo "Download failed"
+    return 1
+fi
+. $PREFIX/glibc/opt/package-manager/package-manager
+sync-all
+
+if [ "$INSTALL_WOW64" = "1" ]; then
+sync-package wine-9.3-vanilla-wow64
+else
+sync-package wine-ge-custom-8-25
+fi
+
+rm -r /data/data/com.termux/files/usr/glibc/opt/scripts
+echo "Installing Termux Packages..."
+echo -e "\n"
+apt-get clean
+apt-get update
+apt-get -y --with-new-pkgs -o Dpkg::Options::="--force-confdef" upgrade
+clear
+
+echo "Installing maslobox Emulator packages (1/3)"
+echo -e "\n"
+pkg install x11-repo -y
+pkg install pulseaudio -y
+pkg install wget -y
+echo "maslobox Emulator Packages Installed Successfuly (1/3)"
+clear
+sleep 2
+
+echo "Installing maslobox Emulator packages (2/3)"
+echo -e "\n"
+pkg install root-repo -
+pkg install termux-x11-nightly -y
+pkg install x11-repo
+pkg install termux-x11-nightly
+pkg install pulseaudio
+echo "maslobox Emulator Packages Installed Successfuly (2/3)"
+clear
+sleep 2
+
+echo "Installing maslobox Emulator packages (3/3)"
+echo -e "\n"
+pkg install xfce4
+pkg install tur-repo
+pkg install xwayland -y
+pkg install xorg-xrandr -y
+pkg install p7zip -y
+pkg install patchelf -y
+pkg install ncurses-utils -y
+pkg install hashdeep -y
+pkg install firefox
+pkg install vlc
+pkg install vlc-qt
+pkg install mesa-zink virglrenderer-mesa-zink vulkan-loader-android virglrenderer-android
+apt install xfce4-whiskermenu-plugin
+apt install xfce4-screenshooter
+apt install android-tools
+apt install glmark
+echo -e "\n"
+
+echo -n "maslobox Emulator Packages Installed Successfuly."
+echo -e "\n"
+sleep 3
+clear
+
+echo "Select an option"
+echo "1) Install box86 scripts for box86-64 build "
+echo "2) Install wow64 scripts for wow64 build "
+echo ""
+echo -n "Selected number: "
+read i
+case "$i" in
+1)
+clear
+echo -n "Installing maslobox (box86) Scripts..."
+# DOWNLOAD 
+wget https://github.com/AGENT404TRD/BOXVIDRA-EMULATOR-BETA-/releases/download/Scripts/Scripts.tar.xz
+
+# EXTRACT 
+tar -xf Scripts.tar.xz
+
+# CREATE
+mkdir -p /data/data/com.termux/files/usr/glibc/opt/scripts
+
+# COPY 1
+cp Scripts/boxvidra /data/data/com.termux/files/usr/bin
+
+# CHMOD
+chmod +x /data/data/com.termux/files/usr/bin/boxvidra
+
+# COPY 2
+cp -r Scripts/* /data/data/com.termux/files/usr/glibc/opt/scripts
+
+# CHMOD 2
+chmod -R +x /data/data/com.termux/files/usr/glibc/opt/scripts
+
+# COPY 3 AND CREATE 2
+if [ ! -d ~/Desktop ]; then
+    mkdir -p ~/Desktop
+fi
+
+# DELETE
+rm Scripts.tar.xz
+rm -r Scripts
+;;
+2)
+echo -n "Installing Boxvidra (wow64) Scripts..."
+# DOWNLOAD 
+wget https://github.com/AGENT404TRD/BOXVIDRA-EMULATOR-BETA-/releases/download/Scripts/Scripts64.tar.xz
+
+# EXTRACT 
+tar -xf Scripts64.tar.xz
+
+# CREATE
+mkdir -p /data/data/com.termux/files/usr/glibc/opt/scripts
+
+# COPY 1
+cp Scripts/boxvidra /data/data/com.termux/files/usr/bin
+
+# CHMOD
+chmod +x /data/data/com.termux/files/usr/bin/boxvidra
+
+# COPY 2
+cp -r Scripts/* /data/data/com.termux/files/usr/glibc/opt/scripts
+
+# CHMOD 2
+chmod -R +x /data/data/com.termux/files/usr/glibc/opt/scripts
+
+# COPY 3 AND CREATE 2
+if [ ! -d ~/Desktop ]; then
+    mkdir -p ~/Desktop
+fi
+
+# DELETE
+rm Scripts64.tar.xz
+rm -r Scripts
+echo -n "maslobox Scripts Installed Successfully"
+clear
+;;
+esac
+
+echo -n "Installing Windows 11 theme (Light) ..."
+   
+wget https://github.com/AGENT404TRD/BOXVIDRA-EMULATOR-BETA-/releases/download/Themes/Windows.11.Light.tar.xz
+tar -xf Windows.11.Light.tar.xz
+cd 'Windows 11 Light'
+cp -r .icons /data/data/com.termux/files/home/
+cp -r PROGRAMS/* /data/data/com.termux/files/home/Desktop
+cp -r .themes /data/data/com.termux/files/home/
+cp -r APPLICATIONS /data/data/com.termux/files/home
+cp .config.tar.xz /data/data/com.termux/files/home
+tar -xf /data/data/com.termux/files/home/.config.tar.xz -C /data/data/com.termux/files/home
+cp Win11.tar.xz /data/data/com.termux/files/usr/share/icons
+tar -xf /data/data/com.termux/files/usr/share/icons/Win11.tar.xz -C /data/data/com.termux/files/usr/share/icons
+cp -r WALLPAPERS /data/data/com.termux/files/home
+rm /data/data/com.termux/files/home/.config.tar.xz
+cd ..
+rm -r 'Windows 11 Light'
+rm Windows.11.Light.tar.xz
+clear
+echo -n "Windows 11 theme (Light) Installed Successfully"
+sleep 3
+clear
+
+echo -n "maslobox Emulator Installed Successfuly"
+echo -e "\n"
+echo "Type \"boxvidraхрень\"" To Start
